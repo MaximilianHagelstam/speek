@@ -11,11 +11,18 @@ type Post struct {
 	Audio     string             `bson:"audio,omitempty" json:"audio"`
 	CreatedAt time.Time          `bson:"created_at" json:"created_at"`
 	Comments  []Comment          `bson:"comments" json:"comments"`
+	Likes     []Like             `bson:"likes" json:"likes"`
 }
 
 type Comment struct {
 	ID        primitive.ObjectID `bson:"_id,omitempty" json:"id,omitempty"`
 	PostID    primitive.ObjectID `bson:"post_id" json:"post_id"`
 	Audio     string             `bson:"audio" json:"audio"`
+	CreatedAt time.Time          `bson:"created_at" json:"created_at"`
+}
+
+type Like struct {
+	ID        primitive.ObjectID `bson:"_id,omitempty" json:"id,omitempty"`
+	PostID    primitive.ObjectID `bson:"post_id" json:"post_id"`
 	CreatedAt time.Time          `bson:"created_at" json:"created_at"`
 }

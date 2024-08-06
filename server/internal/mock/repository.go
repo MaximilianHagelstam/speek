@@ -32,3 +32,11 @@ func (r *Repository) CreateComment(comment internal.Comment) error {
 func (r *Repository) DeleteComment(postID, commentID string) error {
 	return nil
 }
+
+func (r *Repository) CreateLike(like internal.Like) error {
+	return nil
+}
+
+func (r *Repository) DeleteLike(postID, likeID string) error {
+	return nil
+}

@@ -6,4 +6,6 @@ type Repository interface {
 	DeletePost(postID string) error
 	CreateComment(comment Comment) error
 	DeleteComment(postID, commentID string) error
+	CreateLike(like Like) error
+	DeleteLike(postID, likeID string) error
 }

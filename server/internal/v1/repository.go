@@ -82,3 +82,26 @@ func (r *Repository) DeleteComment(postID, commentID string) error {
 	_, err = r.db.Collection("posts").UpdateOne(context.Background(), filter, update)
 	return err
 }
+
+func (r *Repository) CreateLike(like internal.Like) error {
+	filter := bson.M{"_id": like.PostID}
+	update := bson.M{"$push": bson.M{"likes": like}}
+	_, err := r.db.Collection("posts").UpdateOne(context.Background(), filter, update)
+	return err
+}
+
+func (r *Repository) DeleteLike(postID, likeID string) error {
+	postObjectID, err := primitive.ObjectIDFromHex(postID)
+	if err != nil {
+		return err
+	}
+	likeObjectID, err := primitive.ObjectIDFromHex(likeID)
+	if err != nil {
+		return err
+	}
+
+	filter := bson.M{"_id": postObjectID}
+	update := bson.M{"$pull": bson.M{"likes": bson.M{"_id": likeObjectID}}}
+	_, err = r.db.Collection("posts").UpdateOne(context.Background(), filter, update)
+	return err
+}
