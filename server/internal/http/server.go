@@ -49,6 +49,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 
 	r.Get("/api/v1/posts", s.handler.GetPostsHandler)
 	r.Post("/api/v1/posts", s.handler.CreatePostHandler)
+	r.Delete("/api/v1/posts/{id}", s.handler.DeletePostHandler)
 
 	return r
 }

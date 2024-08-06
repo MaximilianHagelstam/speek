@@ -2,9 +2,11 @@ package v1
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/maximilianhagelstam/speek/internal"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -34,10 +36,30 @@ func (r *Repository) GetPosts() ([]internal.Post, error) {
 	return posts, nil
 }
 
-func (r *Repository) CreatePost(post *internal.Post) error {
-	_, err := r.db.Collection("posts").InsertOne(context.Background(), *post)
+func (r *Repository) CreatePost(audio string) error {
+	newPost := internal.Post{Audio: audio}
+	_, err := r.db.Collection("posts").InsertOne(context.Background(), newPost)
 	if err != nil {
 		return err
+	}
+	return nil
+}
+
+func (r *Repository) DeletePost(postID string) error {
+	objectId, err := primitive.ObjectIDFromHex(postID)
+	if err != nil {
+		return err
+	}
+
+	filter := bson.D{{Key: "_id", Value: objectId}}
+	opts := options.Delete().SetHint(bson.D{{Key: "_id", Value: 1}})
+	result, err := r.db.Collection("posts").DeleteOne(context.Background(), filter, opts)
+	if err != nil {
+		return err
+	}
+
+	if result.DeletedCount == 0 {
+		return fmt.Errorf("post id %s doesn't exist", postID)
 	}
 	return nil
 }

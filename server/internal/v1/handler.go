@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/maximilianhagelstam/speek/internal"
 )
 
@@ -31,15 +32,29 @@ func (h *Handler) CreatePostHandler(w http.ResponseWriter, r *http.Request) {
 	var post internal.Post
 
 	err := json.NewDecoder(r.Body).Decode(&post)
-	if err != nil || post.Caption == "" {
+	if err != nil || post.Audio == "" {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	if err := h.repository.CreatePost(&post); err != nil {
+	if err := h.repository.CreatePost(post.Audio); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
+	w.WriteHeader(http.StatusCreated)
+}
+
+func (h *Handler) DeletePostHandler(w http.ResponseWriter, r *http.Request) {
+	postID := chi.URLParam(r, "id")
+	if postID == "" {
+		http.Error(w, "post id is required", http.StatusBadRequest)
+		return
+	}
+
+	if err := h.repository.DeletePost(postID); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 	w.WriteHeader(http.StatusCreated)
 }
