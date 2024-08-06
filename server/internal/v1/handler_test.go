@@ -35,7 +35,7 @@ func TestCreatePostHandler(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(h.CreatePostHandler))
 	defer server.Close()
 
-	postData := map[string]string{"caption": "Test Post"}
+	postData := map[string]string{"audio": "Test Post"}
 	jsonData, _ := json.Marshal(postData)
 
 	resp, err := http.Post(server.URL, "application/json", bytes.NewBuffer(jsonData))

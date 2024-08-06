@@ -50,6 +50,8 @@ func (s *Server) RegisterRoutes() http.Handler {
 	r.Get("/api/v1/posts", s.handler.GetPostsHandler)
 	r.Post("/api/v1/posts", s.handler.CreatePostHandler)
 	r.Delete("/api/v1/posts/{id}", s.handler.DeletePostHandler)
+	r.Post("/api/v1/posts/{id}/comments", s.handler.CreateCommentHandler)
+	r.Delete("/api/v1/posts/{postId}/comments/{commentId}", s.handler.DeleteCommentHandler)
 
 	return r
 }

@@ -22,7 +22,7 @@ func NewRepository(db *mongo.Database) *Repository {
 }
 
 func (r *Repository) GetPosts() ([]internal.Post, error) {
-	opts := options.Find().SetSort(bson.D{{Key: "date_ordered", Value: 1}})
+	opts := options.Find().SetSort(bson.M{"date_ordered": 1})
 	cursor, err := r.db.Collection("posts").Find(context.Background(), bson.D{{}}, opts)
 	if err != nil {
 		return []internal.Post{}, err
@@ -36,13 +36,9 @@ func (r *Repository) GetPosts() ([]internal.Post, error) {
 	return posts, nil
 }
 
-func (r *Repository) CreatePost(audio string) error {
-	newPost := internal.Post{Audio: audio}
-	_, err := r.db.Collection("posts").InsertOne(context.Background(), newPost)
-	if err != nil {
-		return err
-	}
-	return nil
+func (r *Repository) CreatePost(post internal.Post) error {
+	_, err := r.db.Collection("posts").InsertOne(context.Background(), post)
+	return err
 }
 
 func (r *Repository) DeletePost(postID string) error {
@@ -52,7 +48,7 @@ func (r *Repository) DeletePost(postID string) error {
 	}
 
 	filter := bson.D{{Key: "_id", Value: objectId}}
-	opts := options.Delete().SetHint(bson.D{{Key: "_id", Value: 1}})
+	opts := options.Delete().SetHint(bson.M{"_id": 1})
 	result, err := r.db.Collection("posts").DeleteOne(context.Background(), filter, opts)
 	if err != nil {
 		return err
@@ -62,4 +58,27 @@ func (r *Repository) DeletePost(postID string) error {
 		return fmt.Errorf("post id %s doesn't exist", postID)
 	}
 	return nil
+}
+
+func (r *Repository) CreateComment(comment internal.Comment) error {
+	filter := bson.M{"_id": comment.PostID}
+	update := bson.M{"$push": bson.M{"comments": comment}}
+	_, err := r.db.Collection("posts").UpdateOne(context.Background(), filter, update)
+	return err
+}
+
+func (r *Repository) DeleteComment(postID, commentID string) error {
+	postObjectID, err := primitive.ObjectIDFromHex(postID)
+	if err != nil {
+		return err
+	}
+	commentObjectID, err := primitive.ObjectIDFromHex(commentID)
+	if err != nil {
+		return err
+	}
+
+	filter := bson.M{"_id": postObjectID}
+	update := bson.M{"$pull": bson.M{"comments": bson.M{"_id": commentObjectID}}}
+	_, err = r.db.Collection("posts").UpdateOne(context.Background(), filter, update)
+	return err
 }
