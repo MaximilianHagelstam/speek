@@ -54,12 +54,14 @@ func (h *Handler) CreatePostHandler(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) DeletePostHandler(w http.ResponseWriter, r *http.Request) {
 	postID := chi.URLParam(r, "id")
-	if postID == "" {
-		http.Error(w, "post id is required", http.StatusBadRequest)
+
+	postObjectID, err := primitive.ObjectIDFromHex(postID)
+	if err != nil {
+		http.Error(w, "invalid post ID", http.StatusBadRequest)
 		return
 	}
 
-	if err := h.repository.DeletePost(postID); err != nil {
+	if err := h.repository.DeletePost(postObjectID); err != nil {
 		http.Error(w, "error deleting post", http.StatusInternalServerError)
 		return
 	}
@@ -69,10 +71,6 @@ func (h *Handler) DeletePostHandler(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) CreateCommentHandler(w http.ResponseWriter, r *http.Request) {
 	postID := chi.URLParam(r, "id")
-	if postID == "" {
-		http.Error(w, "post id is required", http.StatusBadRequest)
-		return
-	}
 
 	var comment internal.Comment
 	err := json.NewDecoder(r.Body).Decode(&comment)
@@ -107,12 +105,18 @@ func (h *Handler) DeleteCommentHandler(w http.ResponseWriter, r *http.Request) {
 	postID := chi.URLParam(r, "postId")
 	commentID := chi.URLParam(r, "commentId")
 
-	if postID == "" || commentID == "" {
-		http.Error(w, "post id and comment id are required fields", http.StatusBadRequest)
+	postObjectID, err := primitive.ObjectIDFromHex(postID)
+	if err != nil {
+		http.Error(w, "invalid post ID", http.StatusBadRequest)
+		return
+	}
+	commentObjectID, err := primitive.ObjectIDFromHex(commentID)
+	if err != nil {
+		http.Error(w, "invalid comment ID", http.StatusBadRequest)
 		return
 	}
 
-	if err := h.repository.DeleteComment(postID, commentID); err != nil {
+	if err := h.repository.DeleteComment(postObjectID, commentObjectID); err != nil {
 		http.Error(w, "error deleting comment", http.StatusInternalServerError)
 		return
 	}
@@ -122,10 +126,6 @@ func (h *Handler) DeleteCommentHandler(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) LikePostHandler(w http.ResponseWriter, r *http.Request) {
 	postID := chi.URLParam(r, "id")
-	if postID == "" {
-		http.Error(w, "post id is required", http.StatusBadRequest)
-		return
-	}
 
 	postObjectID, err := primitive.ObjectIDFromHex(postID)
 	if err != nil {
@@ -141,23 +141,6 @@ func (h *Handler) LikePostHandler(w http.ResponseWriter, r *http.Request) {
 
 	if err := h.repository.CreateLike(like); err != nil {
 		http.Error(w, "error creating like", http.StatusInternalServerError)
-		return
-	}
-
-	w.WriteHeader(http.StatusCreated)
-}
-
-func (h *Handler) UnLikePostHandler(w http.ResponseWriter, r *http.Request) {
-	postID := chi.URLParam(r, "id")
-	if postID == "" {
-		http.Error(w, "post id is required", http.StatusBadRequest)
-		return
-	}
-
-	// TODO: find likeID with current userID
-
-	if err := h.repository.DeleteLike(postID, ""); err != nil {
-		http.Error(w, "error deleting like", http.StatusInternalServerError)
 		return
 	}
 

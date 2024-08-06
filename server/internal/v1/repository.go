@@ -23,7 +23,7 @@ func NewRepository(db *mongo.Database) *Repository {
 
 func (r *Repository) GetPosts() ([]internal.Post, error) {
 	opts := options.Find().SetSort(bson.M{"date_ordered": 1})
-	cursor, err := r.db.Collection("posts").Find(context.Background(), bson.D{{}}, opts)
+	cursor, err := r.db.Collection("posts").Find(context.Background(), bson.M{}, opts)
 	if err != nil {
 		return []internal.Post{}, err
 	}
@@ -41,14 +41,10 @@ func (r *Repository) CreatePost(post internal.Post) error {
 	return err
 }
 
-func (r *Repository) DeletePost(postID string) error {
-	objectId, err := primitive.ObjectIDFromHex(postID)
-	if err != nil {
-		return err
-	}
-
-	filter := bson.D{{Key: "_id", Value: objectId}}
+func (r *Repository) DeletePost(postID primitive.ObjectID) error {
+	filter := bson.M{"_id": postID}
 	opts := options.Delete().SetHint(bson.M{"_id": 1})
+
 	result, err := r.db.Collection("posts").DeleteOne(context.Background(), filter, opts)
 	if err != nil {
 		return err
@@ -57,6 +53,7 @@ func (r *Repository) DeletePost(postID string) error {
 	if result.DeletedCount == 0 {
 		return fmt.Errorf("post id %s doesn't exist", postID)
 	}
+
 	return nil
 }
 
@@ -67,19 +64,10 @@ func (r *Repository) CreateComment(comment internal.Comment) error {
 	return err
 }
 
-func (r *Repository) DeleteComment(postID, commentID string) error {
-	postObjectID, err := primitive.ObjectIDFromHex(postID)
-	if err != nil {
-		return err
-	}
-	commentObjectID, err := primitive.ObjectIDFromHex(commentID)
-	if err != nil {
-		return err
-	}
-
-	filter := bson.M{"_id": postObjectID}
-	update := bson.M{"$pull": bson.M{"comments": bson.M{"_id": commentObjectID}}}
-	_, err = r.db.Collection("posts").UpdateOne(context.Background(), filter, update)
+func (r *Repository) DeleteComment(postID, commentID primitive.ObjectID) error {
+	filter := bson.M{"_id": postID}
+	update := bson.M{"$pull": bson.M{"comments": bson.M{"_id": commentID}}}
+	_, err := r.db.Collection("posts").UpdateOne(context.Background(), filter, update)
 	return err
 }
 
@@ -90,18 +78,9 @@ func (r *Repository) CreateLike(like internal.Like) error {
 	return err
 }
 
-func (r *Repository) DeleteLike(postID, likeID string) error {
-	postObjectID, err := primitive.ObjectIDFromHex(postID)
-	if err != nil {
-		return err
-	}
-	likeObjectID, err := primitive.ObjectIDFromHex(likeID)
-	if err != nil {
-		return err
-	}
-
-	filter := bson.M{"_id": postObjectID}
-	update := bson.M{"$pull": bson.M{"likes": bson.M{"_id": likeObjectID}}}
-	_, err = r.db.Collection("posts").UpdateOne(context.Background(), filter, update)
+func (r *Repository) DeleteLike(postID, likeID primitive.ObjectID) error {
+	filter := bson.M{"_id": postID}
+	update := bson.M{"$pull": bson.M{"likes": bson.M{"_id": likeID}}}
+	_, err := r.db.Collection("posts").UpdateOne(context.Background(), filter, update)
 	return err
 }
